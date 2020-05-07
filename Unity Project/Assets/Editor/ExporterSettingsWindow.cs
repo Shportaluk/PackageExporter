@@ -43,6 +43,10 @@ namespace StansAssets.PackageExport.Editor
             _listRequest = Client.List();
             EditorApplication.update += Progress;
 
+            //AssetDatabase.ExportPackage("Assets/StansAssets/Plugins/com.unity.probuilder@4.0.5", "D:/test.unitypackage", ExportPackageOptions.Recurse);
+            //AssetDatabase.DeleteAsset("Assets/StansAssets/Plugins/com.unity.probuilder@4.0.5");
+            //PackageExporter.ExportPackage("Assets/StansAssets/Plugins/" + "com.unity.probuilder@4.0.5");
+            //AssetDatabase.DeleteAsset("Assets/StansAssets/Plugins/" + "com.unity.probuilder@4.0.5");
             var c = packageInfos;
             string s = "";
         }
@@ -63,7 +67,7 @@ namespace StansAssets.PackageExport.Editor
 
                     if( GUILayout.Button("Export") )
                     {
-                        PackageExporter.ExportPackage(packageInfos[i]);
+                        PackageExporter.ExportPackage(packageInfos[i].assetPath, packageInfos[i].resolvedPath);
                     }
                     GUILayout.EndHorizontal();
                 }

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -18,13 +20,50 @@ namespace StansAssets.PackageExport.Editor
 		/// <summary>
 		/// Export package as <c>.unitypackage</c>
 		/// </summary>
-		/// <param name="packageInfo">Package info. The package to be exported</param>
-		public static void ExportPackage(UnityEditor.PackageManager.PackageInfo packageInfo)
+		/// <param name="assetPath">Asset path. Asset path to package to be exported example: Packages/ProBuilder</param>
+		/// <param name="resolvedPath">Resolved path. Full path to package to be exported example: C:/UnityProject/.../Library/PackageCache/ProBuilde@4.0.1</param>
+		public static void ExportPackage(string assetPath, string resolvedPath)
 		{
-			Debug.Log("Package name: " + packageInfo.name);
-			var pathDestinationPackage = EditorUtility.SaveFilePanel("Save unitypackage", "", packageInfo.name.Replace(".", "_"), "unitypackage");
-			//string pathDestinationPackage = "D:\\" + packageInfo.name.Replace(".", "_") + ".unitypackage";
-			AssetDatabase.ExportPackage(packageInfo.assetPath, pathDestinationPackage, ExportPackageOptions.Recurse);
+			if (assetPath.Contains("StansAssets"))
+			{
+				AssetDatabase.ExportPackage(assetPath, "D:/test.unitypackage", ExportPackageOptions.Recurse);
+			}
+			else
+			{
+				CopyAssetAndExport(resolvedPath);
+			}
+		}
+		static void CopyAssetAndExport(string resolvedPath)
+		{
+			List<string> paths = new List<string>();
+
+			var files = AssetDatabase.GetAllAssetPaths();
+			string pathToPackageFolder = resolvedPath.Replace("\\", "/"); 
+			string folderName = Path.GetFileName(pathToPackageFolder);
+			string pathMainToProject = pathToPackageFolder.Substring(0, pathToPackageFolder.IndexOf("/Library/"));
+			string pathDestination = pathMainToProject + "/" + "Assets/StansAssets/Plugins/" + folderName;
+
+			var pathDestinationPackage = EditorUtility.SaveFilePanel("Save unitypackage", "", folderName.Replace(".", "_"), "unitypackage");
+			Copy(pathToPackageFolder, pathDestination);
+			AssetDatabase.Refresh();
+			AssetDatabase.ExportPackage("Assets/StansAssets/Plugins/" + folderName, pathDestinationPackage, ExportPackageOptions.Recurse);
+			AssetDatabase.DeleteAsset("Assets/StansAssets/Plugins/" + folderName);
+		}
+		static void Copy(string sourceDir, string targetDir)
+		{
+			if (!Directory.Exists(targetDir))
+				Directory.CreateDirectory(targetDir);
+
+			string destFileName;
+			foreach (var file in Directory.GetFiles(sourceDir))
+			{
+				destFileName = Path.Combine(targetDir, Path.GetFileName(file));
+				if (!File.Exists(destFileName) && !destFileName.Contains(".asmdef"))
+					File.Copy(file, destFileName);
+			}
+
+			foreach (var directory in Directory.GetDirectories(sourceDir))
+				Copy(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
 		}
 
 		static void OnEditorApplication()
