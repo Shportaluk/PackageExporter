@@ -40,14 +40,22 @@ namespace StansAssets.PackageExport.Editor
 			var files = AssetDatabase.GetAllAssetPaths();
 			string pathToPackageFolder = resolvedPath.Replace("\\", "/"); 
 			string folderName = Path.GetFileName(pathToPackageFolder);
-			string pathMainToProject = pathToPackageFolder.Substring(0, pathToPackageFolder.IndexOf("/Library/"));
-			string pathDestination = pathMainToProject + "/" + "Assets/StansAssets/Plugins/" + folderName;
+
+			// Application.dataPath = projectPath + "/Assets"  Example: C:/ProjectUnity/Exporter/Assets
+			string pathDestination = Application.dataPath + "/StansAssets/Plugins/" + folderName;
 
 			var pathDestinationPackage = EditorUtility.SaveFilePanel("Save unitypackage", "", folderName.Replace(".", "_"), "unitypackage");
-			Copy(pathToPackageFolder, pathDestination);
-			AssetDatabase.Refresh();
-			AssetDatabase.ExportPackage("Assets/StansAssets/Plugins/" + folderName, pathDestinationPackage, ExportPackageOptions.Recurse);
-			AssetDatabase.DeleteAsset("Assets/StansAssets/Plugins/" + folderName);
+			if (!string.IsNullOrEmpty(pathDestinationPackage))
+			{
+				Copy(pathToPackageFolder, pathDestination);
+				AssetDatabase.Refresh();
+				AssetDatabase.ExportPackage("Assets/StansAssets/Plugins/" + folderName, pathDestinationPackage, ExportPackageOptions.Recurse);
+				AssetDatabase.DeleteAsset("Assets/StansAssets/Plugins/" + folderName);
+			}
+			else
+			{
+				return;
+			}
 		}
 		static void Copy(string sourceDir, string targetDir)
 		{
@@ -58,8 +66,9 @@ namespace StansAssets.PackageExport.Editor
 			foreach (var file in Directory.GetFiles(sourceDir))
 			{
 				destFileName = Path.Combine(targetDir, Path.GetFileName(file));
-				if (!File.Exists(destFileName) && !destFileName.Contains(".asmdef"))
+				//if (!File.Exists(destFileName) && !destFileName.Contains(".asmdef"))
 					File.Copy(file, destFileName);
+
 			}
 
 			foreach (var directory in Directory.GetDirectories(sourceDir))
